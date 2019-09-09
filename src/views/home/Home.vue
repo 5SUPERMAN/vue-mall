@@ -97,6 +97,7 @@ export default {
           this.currentType = "sell";
           break;
       }
+      // 让两个 tab-control被选中的 currentType保持一致----通过 v-show将 scroll外部的 tab-control达到条件后显示，来做到吸顶效果
       this.$refs.tabControl1.currentIndex = index;
       this.$refs.tabControl2.currentIndex = index;
     },
