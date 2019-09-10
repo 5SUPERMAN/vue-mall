@@ -57,7 +57,8 @@ export default {
       currentType: "pop",
       isShowBackTop: false,
       tabOffsetTop: 0,
-      isTabControlFixed: false
+      isTabControlFixed: false,
+      saveY: 0
     };
   },
   computed: {
@@ -81,6 +82,16 @@ export default {
       refresh();
     });
   },
+  // 切换页面时，记录当前页面位置，等切回来时保持来位置
+  // 点击进来页面时的一个函数
+  activated() {
+    this.$refs.scroll.scrollTo(0, this.saveY, 0);
+    this.$refs.scroll.refresh();
+  },
+  // 点击离开该页面时的一个函数
+  deactivated() {
+    this.saveY = this.$refs.scroll.getScrollY();
+  },
   methods: {
     /**
      * 事件监听的方法
@@ -100,6 +111,9 @@ export default {
       // 让两个 tab-control被选中的 currentType保持一致----通过 v-show将 scroll外部的 tab-control达到条件后显示，来做到吸顶效果
       this.$refs.tabControl1.currentIndex = index;
       this.$refs.tabControl2.currentIndex = index;
+      // 选择不同 currentType的时候，回到 tab-control的位置
+      this.$refs.scroll.scrollTo(0, -this.tabOffsetTop, 0);
+      this.$refs.scroll.refresh();
     },
     backClick() {
       this.$refs.scroll.scrollTo(0, 0);
