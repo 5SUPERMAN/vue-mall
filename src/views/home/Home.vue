@@ -42,9 +42,11 @@ import BackTop from "components/content/backTop/BackTop";
 
 import { getHomeMultidata, getHomeGoods } from "network/home.js";
 import { debounce } from "common/utils";
+import { itemListenerMixin } from "common/mixin";
 
 export default {
   name: "Home",
+  mixins: [itemListenerMixin],
   data() {
     return {
       banners: [],
@@ -76,11 +78,7 @@ export default {
     this.getHomeGoods("sell");
   },
   mounted() {
-    // 1.监听 item中图片加载完成
-    const refresh = debounce(this.$refs.scroll.refresh, 50);
-    this.$bus.$on("itemImageLoad", () => {
-      refresh();
-    });
+    
   },
   // 切换页面时，记录当前页面位置，等切回来时保持来位置
   // 点击进来页面时的一个函数
@@ -90,7 +88,11 @@ export default {
   },
   // 点击离开该页面时的一个函数
   deactivated() {
+    // 1.保持 Y值
     this.saveY = this.$refs.scroll.getScrollY();
+
+    // 2.取消全局事件监听
+    this.$bus.$off("itemImageLoad", this.itemImgListener);
   },
   methods: {
     /**

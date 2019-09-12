@@ -6,9 +6,9 @@
       <detail-base-info :detail-goods="detailGoods" />
       <detail-shop-info :detail-shop="detailShop" />
       <detail-goods-info :detail-info="detailInfo" @imageLoad="imageLoad" />
-      <detail-param-info :param-info="paramInfo"/>
-      <detail-comment-info :comment-info="commentInfo"/>
-      <goods-list :goods="recommend"/>
+      <detail-param-info :param-info="paramInfo" />
+      <detail-comment-info :comment-info="commentInfo" />
+      <goods-list :goods="recommend" />
     </scroll>
   </div>
 </template>
@@ -23,12 +23,21 @@ import DetailParamInfo from "./childComps/DetailParamInfo";
 import DetailCommentInfo from "./childComps/DetailCommentInfo";
 
 import Scroll from "components/common/scroll/Scroll";
-import GoodsList from 'components/content/goods/GoodsList'
+import GoodsList from "components/content/goods/GoodsList";
 
-import { getDetail, getRecommend, DetailGoods, DetailShop, GoodsParam } from "network/detail";
+import {
+  getDetail,
+  getRecommend,
+  DetailGoods,
+  DetailShop,
+  GoodsParam
+} from "network/detail";
+import { debounce } from "common/utils";
+import { itemListenerMixin } from "common/mixin";
 
 export default {
   name: "Detail",
+  mixins: [itemListenerMixin],
   data() {
     return {
       iid: null,
@@ -73,7 +82,7 @@ export default {
       );
 
       // (7)获取评论的信息
-      if(data.rate.cRate !== 0){
+      if (data.rate.cRate !== 0) {
         this.commentInfo = data.rate.list[0];
       }
     });
@@ -81,7 +90,11 @@ export default {
     // 3.请求推荐数据
     getRecommend().then(res => {
       this.recommend = res.data.list;
-    })
+    });
+  },
+  mounted() {},
+  destroyed() {
+    this.$bus.$off("itemImageLoad", this.itemImgListener);
   },
   methods: {
     imageLoad() {
