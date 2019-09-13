@@ -1,15 +1,22 @@
 <template>
   <div id="detail">
-    <detail-nav-bar />
-    <scroll class="content" ref="scroll">
+    <detail-nav-bar @navBarClick="navBarClick" ref="navBar"/>
+    <scroll
+      class="content"
+      ref="scroll"
+      @scroll="scrollContent"
+      :probe-type="3"
+      :pull-up-load="true"
+    >
       <detail-swiper :top-images="topImages" />
       <detail-base-info :detail-goods="detailGoods" />
       <detail-shop-info :detail-shop="detailShop" />
       <detail-goods-info :detail-info="detailInfo" @imageLoad="imageLoad" />
-      <detail-param-info :param-info="paramInfo" />
-      <detail-comment-info :comment-info="commentInfo" />
-      <goods-list :goods="recommend" />
+      <detail-param-info ref="params" :param-info="paramInfo" />
+      <detail-comment-info ref="comment" :comment-info="commentInfo" />
+      <goods-list ref="recommend" :goods="recommend" />
     </scroll>
+    <back-top @click.native="backClick" v-show="isShowBackTop" />
   </div>
 </template>
 
@@ -24,6 +31,7 @@ import DetailCommentInfo from "./childComps/DetailCommentInfo";
 
 import Scroll from "components/common/scroll/Scroll";
 import GoodsList from "components/content/goods/GoodsList";
+import BackTop from "../../components/content/backTop/BackTop";
 
 import {
   getDetail,
@@ -47,7 +55,11 @@ export default {
       detailInfo: {},
       paramInfo: {},
       commentInfo: {},
-      recommend: []
+      recommend: [],
+      themeTopYs: [],
+      getThemeTopY: null,
+      currentIndex: 0,
+      isShowBackTop: false
     };
   },
   created() {
@@ -91,6 +103,15 @@ export default {
     getRecommend().then(res => {
       this.recommend = res.data.list;
     });
+
+    // 4.给 getThemeTopY进行防抖操作
+    this.getThemeTopY = debounce(() => {
+      this.themeTopYs = [];
+      this.themeTopYs.push(0);
+      this.themeTopYs.push(this.$refs.params.$el.offsetTop);
+      this.themeTopYs.push(this.$refs.comment.$el.offsetTop);
+      this.themeTopYs.push(this.$refs.recommend.$el.offsetTop);
+    }, 50);
   },
   mounted() {},
   destroyed() {
@@ -98,7 +119,29 @@ export default {
   },
   methods: {
     imageLoad() {
-      this.$refs.scroll.refresh();
+      this.newRefresh();
+
+      this.getThemeTopY();
+    },
+    navBarClick(index) {
+      this.$refs.scroll.scrollTo(0, -this.themeTopYs[index], 300);
+    },
+    scrollContent(position) {
+      // 1.获取 Y 的值
+      const positionY = -position.y;
+      // 2.positionY和主题中的值进行对比
+      let length = this.themeTopYs.length;
+      for(let i=0; i < length; i++){
+        if(this.currentIndex !== i && ((i < length-1 && positionY >= this.themeTopYs[i] && positionY < this.themeTopYs[i+1]) || (i === length-1 && positionY >= this.themeTopYs[i]))){
+          this.currentIndex = i;
+          this.$refs.navBar.currentIndex = this.currentIndex;
+        }
+      }
+
+      this.isShowBackTop = positionY >= 700;
+    },
+    backClick() {
+      this.$refs.scroll.scrollTo(0, 0, 300);
     }
   },
   components: {
@@ -110,7 +153,8 @@ export default {
     DetailParamInfo,
     DetailCommentInfo,
     Scroll,
-    GoodsList
+    GoodsList,
+    BackTop
   }
 };
 </script>
