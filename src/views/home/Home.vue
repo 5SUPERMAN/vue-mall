@@ -38,15 +38,14 @@ import NavBar from "components/common/navbar/NavBar";
 import TabControl from "components/content/tabControl/TabControl";
 import GoodsList from "components/content/goods/GoodsList";
 import Scroll from "components/common/scroll/Scroll";
-import BackTop from "components/content/backTop/BackTop";
 
 import { getHomeMultidata, getHomeGoods } from "network/home.js";
 import { debounce } from "common/utils";
-import { itemListenerMixin } from "common/mixin";
+import { itemListenerMixin, backTopMixin } from "common/mixin";
 
 export default {
   name: "Home",
-  mixins: [itemListenerMixin],
+  mixins: [itemListenerMixin, backTopMixin],
   data() {
     return {
       banners: [],
@@ -57,7 +56,6 @@ export default {
         sell: { page: 0, list: [] }
       },
       currentType: "pop",
-      isShowBackTop: false,
       tabOffsetTop: 0,
       isTabControlFixed: false,
       saveY: 0
@@ -117,12 +115,9 @@ export default {
       this.$refs.scroll.scrollTo(0, -this.tabOffsetTop, 0);
       this.$refs.scroll.refresh();
     },
-    backClick() {
-      this.$refs.scroll.scrollTo(0, 0);
-    },
     scrollContent(position) {
       // 判断回到顶部 BackClick按钮是否显示
-      this.isShowBackTop = -position.y >= 700;
+      this.listenerShowBackTop(position);
 
       // 决定 tabControl是否吸顶
       this.isTabControlFixed = -position.y >= this.tabOffsetTop;
@@ -164,7 +159,6 @@ export default {
     TabControl,
     GoodsList,
     Scroll,
-    BackTop
   }
 };
 </script>

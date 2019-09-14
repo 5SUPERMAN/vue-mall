@@ -1,6 +1,6 @@
 <template>
   <div id="detail">
-    <detail-nav-bar @navBarClick="navBarClick" ref="navBar"/>
+    <detail-nav-bar @navBarClick="navBarClick" ref="navBar" />
     <scroll
       class="content"
       ref="scroll"
@@ -16,6 +16,7 @@
       <detail-comment-info ref="comment" :comment-info="commentInfo" />
       <goods-list ref="recommend" :goods="recommend" />
     </scroll>
+    <detail-bottom-bar @addCart="addToCart" />
     <back-top @click.native="backClick" v-show="isShowBackTop" />
   </div>
 </template>
@@ -28,10 +29,10 @@ import DetailShopInfo from "./childComps/DetailShopInfo";
 import DetailGoodsInfo from "./childComps/DetailGoodsInfo";
 import DetailParamInfo from "./childComps/DetailParamInfo";
 import DetailCommentInfo from "./childComps/DetailCommentInfo";
+import DetailBottomBar from "./childComps/DetailBottomBar";
 
 import Scroll from "components/common/scroll/Scroll";
 import GoodsList from "components/content/goods/GoodsList";
-import BackTop from "../../components/content/backTop/BackTop";
 
 import {
   getDetail,
@@ -41,11 +42,11 @@ import {
   GoodsParam
 } from "network/detail";
 import { debounce } from "common/utils";
-import { itemListenerMixin } from "common/mixin";
+import { itemListenerMixin, backTopMixin } from "common/mixin";
 
 export default {
   name: "Detail",
-  mixins: [itemListenerMixin],
+  mixins: [itemListenerMixin, backTopMixin],
   data() {
     return {
       iid: null,
@@ -58,8 +59,7 @@ export default {
       recommend: [],
       themeTopYs: [],
       getThemeTopY: null,
-      currentIndex: 0,
-      isShowBackTop: false
+      currentIndex: 0
     };
   },
   created() {
@@ -111,6 +111,7 @@ export default {
       this.themeTopYs.push(this.$refs.params.$el.offsetTop);
       this.themeTopYs.push(this.$refs.comment.$el.offsetTop);
       this.themeTopYs.push(this.$refs.recommend.$el.offsetTop);
+      this.themeTopYs.push(Number.MAX_VALUE);
     }, 50);
   },
   mounted() {},
@@ -131,17 +132,39 @@ export default {
       const positionY = -position.y;
       // 2.positionY和主题中的值进行对比
       let length = this.themeTopYs.length;
-      for(let i=0; i < length; i++){
-        if(this.currentIndex !== i && ((i < length-1 && positionY >= this.themeTopYs[i] && positionY < this.themeTopYs[i+1]) || (i === length-1 && positionY >= this.themeTopYs[i]))){
+      for (let i = 0; i < length - 1; i++) {
+        // 普通方法
+        // if(this.currentIndex !== i && ((i < length-1 && positionY >= this.themeTopYs[i] && positionY < this.themeTopYs[i+1]) || (i === length-1 && positionY >= this.themeTopYs[i]))){
+        //   this.currentIndex = i;
+        //   this.$refs.navBar.currentIndex = this.currentIndex;
+        // }
+
+        // hack方法
+        if (
+          this.currentIndex !== i &&
+          (i < length - 1 &&
+            positionY >= this.themeTopYs[i] &&
+            positionY < this.themeTopYs[i + 1])
+        ) {
           this.currentIndex = i;
           this.$refs.navBar.currentIndex = this.currentIndex;
         }
       }
 
-      this.isShowBackTop = positionY >= 700;
+      // 是否显示回到顶部按钮
+      this.listenerShowBackTop(position);
     },
-    backClick() {
-      this.$refs.scroll.scrollTo(0, 0, 300);
+    addToCart() {
+      // 1.获取购物车需要展示的信息
+      const product = {};
+      product.image = this.topImages[0];
+      product.title = this.detailGoods.title;
+      product.desc = this.detailGoods.desc;
+      product.price = this.detailGoods.realPrice;
+      product.iid = this.iid;
+
+      // 2.将商品添加到购物车里
+      this.$store.dispatch("addCart", product);
     }
   },
   components: {
@@ -152,9 +175,9 @@ export default {
     DetailGoodsInfo,
     DetailParamInfo,
     DetailCommentInfo,
+    DetailBottomBar,
     Scroll,
-    GoodsList,
-    BackTop
+    GoodsList
   }
 };
 </script>
@@ -168,7 +191,7 @@ export default {
 .content {
   position: absolute;
   top: 44px;
-  bottom: 0;
+  bottom: 49px;
   left: 0;
   right: 0;
   background-color: #fff;
