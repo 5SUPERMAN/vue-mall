@@ -6,11 +6,13 @@
     <scroll class="content" ref="scroll">
       <cart-list />
     </scroll>
+    <check-bottom-bar />
   </div>
 </template>
 
 <script>
 import CartList from "./childComps/CartList";
+import CheckBottomBar from './childComps/CheckBottomBar'
 
 import NavBar from "components/common/navbar/NavBar";
 import Scroll from "components/common/scroll/Scroll";
@@ -27,6 +29,7 @@ export default {
   },
   components: {
     CartList,
+    CheckBottomBar,
     NavBar,
     Scroll
   }
@@ -45,7 +48,7 @@ export default {
 .content {
   position: absolute;
   top: 44px;
-  bottom: 49px;
+  bottom: 79px;
   left: 0;
   right: 0;
   overflow: hidden;
