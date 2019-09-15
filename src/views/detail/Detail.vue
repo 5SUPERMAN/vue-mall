@@ -44,6 +44,8 @@ import {
 import { debounce } from "common/utils";
 import { itemListenerMixin, backTopMixin } from "common/mixin";
 
+import { mapActions } from "vuex";
+
 export default {
   name: "Detail",
   mixins: [itemListenerMixin, backTopMixin],
@@ -154,6 +156,8 @@ export default {
       // 是否显示回到顶部按钮
       this.listenerShowBackTop(position);
     },
+
+    ...mapActions(["addCart"]),
     addToCart() {
       // 1.获取购物车需要展示的信息
       const product = {};
@@ -164,7 +168,15 @@ export default {
       product.iid = this.iid;
 
       // 2.将商品添加到购物车里
-      this.$store.dispatch("addCart", product);
+      // 方法1：
+      // this.$store.dispatch("addCart", product).then(res => {
+      //   console.log(res);
+      // });
+
+      // 方法2：通过 mapActions映射关系
+      this.addCart(product).then(res => {
+        this.$toast.show(res);
+      });
     }
   },
   components: {
@@ -185,7 +197,7 @@ export default {
 <style scoped>
 #detail {
   position: relative;
-  z-index: 99;
+  z-index: 9;
   height: 100vh;
 }
 .content {
